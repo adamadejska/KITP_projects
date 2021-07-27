@@ -4,9 +4,12 @@
 # What genera do these species tend to come from?
 # Input file: /home/ada/Desktop/KITP_tutorials/kitp_2021_microbiome_data/species/count_reads.txt.bz2
 
-import pandas as pd
+from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from taxonomy_ranks import TaxonomyRanks
+
 
 input_f = '/home/ada/Desktop/KITP_tutorials/kitp_2021_microbiome_data/species/count_reads.txt.bz2'
 
@@ -21,3 +24,36 @@ print('How many species have coverage >= 1x in average person? A: %d' %(sum(cove
 
 # 20x
 print('How many species have coverage >= 10x in average person? A: %d' %(sum(coverage_df.mean(axis=1)>=20)))   # Answer: 143
+
+print(coverage_df.head())
+
+# What genera do these species tend to come from? Try on the mean coverage >= 10.
+bacteria_cov_10 = coverage_df.index[coverage_df.mean(axis=1)>=10]
+
+cleaned_names = []
+# Clean the names
+for i in bacteria_cov_10:
+    name = i.split('_')[:2]
+    name = ' '.join(name)
+    cleaned_names.append(name)
+
+errors = []
+genera = []
+for i in cleaned_names:
+    try: 
+        rank_taxon = TaxonomyRanks(i)
+        rank_taxon.get_lineage_taxids_and_taxanames()
+        taxid = list(rank_taxon.lineages.keys())[0]
+        genus = rank_taxon.lineages[taxid]['genus'][0]
+        genera.append(genus)
+    except:
+        # Some names in the database have misspellings (catch those errors)
+        errors.append(i)
+
+# Show the pie chart of the genera
+f = Counter(genera)
+labels = f.keys()
+vals = f.values()
+plt.pie(vals, labels=labels, textprops={'fontsize': 8})
+plt.title('Genera names the species tend to come from when avg coverage >= 10')
+plt.show()
