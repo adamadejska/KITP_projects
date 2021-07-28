@@ -50,7 +50,7 @@ for s, avg in species_avg_depth.items():
     plt.ylabel('average depth')
     plt.tick_params(labelbottom=False)
     plt.show()
-"""
+
 
 # Are some genes present in almost all samples?
 # To answer this question, we need to use a MIDAS database file rep_genomes/Bacteroides_vulgatus_57955/genome.features.gz
@@ -104,3 +104,44 @@ for line in features:
 
 
 print(len(genes_in_all))
+"""
+
+# Can you identify the “typical”coverage for each sample? By eye? By some automatic method?
+# A quick and dirty way would be to make a histogram of coverages for each sample. That's what we will start with.
+
+line = str(snps_file.readline()) # header
+items = line.strip().split("\\t")
+samples = np.array([item.strip() for item in items[1:]])
+
+# As an approximation just use the first 10 k positions
+counter = 0
+lines_lim = 100000
+
+sample_to_depths = {}
+for line in snps_file:
+    if counter > lines_lim:
+        break
+    else:
+        counter += 1
+
+    line = str(line)[:-3].split('\\t')    # Get rid of trailing \\n and separators \\t
+    pos = int(line[0].split('|')[1])
+    species = line[0].split('|')[0][2:]
+
+    # Get all the depths for each position in the genome.
+    depths_per_position = np.array([int(x) for x in line[1:]])
+    for s in range(0, len(samples)):
+        if samples[s] not in sample_to_depths.keys():
+            sample_to_depths[samples[s]] = [depths_per_position[s]]
+        else:
+            sample_to_depths[samples[s]].append(depths_per_position[s])
+
+# Make the histograms for each sample in the file.
+for s in samples:
+    
+    bins = range(1,max(sample_to_depths[s]),1)
+    plt.hist(sample_to_depths[s], bins=bins)
+    plt.xlabel('Depth at a position A')
+    plt.ylabel('Number of sites with specific depth')
+    plt.title('Distribution of coverage depths for sample ' + s + '\n (first 100k positions)')
+    plt.show()
