@@ -6,8 +6,10 @@
 
 from collections import Counter
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from taxonomy_ranks import TaxonomyRanks
 
 
@@ -15,6 +17,11 @@ input_f = '/home/ada/Desktop/KITP_tutorials/kitp_2021_microbiome_data/species/co
 
 # Create a dataframe from the reads counts, col = participants, row = bacterial species
 coverage_df = pd.read_csv(input_f, sep='\t', index_col='species_id')
+print(coverage_df.head())
+# Get a general idea of what the value distribution looks like.
+#fig, ax = plt.subplots(figsize=(20,20))  
+#sns.heatmap(coverage_df, norm=LogNorm(), ax=ax)
+#plt.show()
 
 #How many species have coverage >= 10x in average person?(repeat for 1x, 20x, ...)
 print('How many species have coverage >= 10x in average person? A: %d' %(sum(coverage_df.mean(axis=1)>=10)))   # Answer: 177
@@ -23,9 +30,8 @@ print('How many species have coverage >= 10x in average person? A: %d' %(sum(cov
 print('How many species have coverage >= 1x in average person? A: %d' %(sum(coverage_df.mean(axis=1)>=1)))     # Answer: 315
 
 # 20x
-print('How many species have coverage >= 10x in average person? A: %d' %(sum(coverage_df.mean(axis=1)>=20)))   # Answer: 143
+print('How many species have coverage >= 20x in average person? A: %d' %(sum(coverage_df.mean(axis=1)>=20)))   # Answer: 143
 
-print(coverage_df.head())
 
 # What genera do these species tend to come from? Try on the mean coverage >= 10.
 bacteria_cov_10 = coverage_df.index[coverage_df.mean(axis=1)>=10]
@@ -56,4 +62,6 @@ labels = f.keys()
 vals = f.values()
 plt.pie(vals, labels=labels, textprops={'fontsize': 8})
 plt.title('Genera names the species tend to come from when avg coverage >= 10')
-plt.show()
+#plt.show()
+
+# How many of these species does an average pair of people share? What about samples from the same person over time?
