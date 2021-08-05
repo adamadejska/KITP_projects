@@ -90,19 +90,45 @@ with gzip.open(file_path, 'r') as f:
                     except KeyError:
                         host_timepoints[host][i] = [pos]
 
-# Check the similarity between time points (for simplicity, we will consider just 2 points for each 
-#   host)
-within_host_similarity = {}
-for k, v in host_timepoints.items():
-    time_list = list(v.keys())
-    set1 = set(v[time_list[0]])
-    set2 = set(v[time_list[-1]])
 
-    # Check how many items are in common
-    common = len(set1.intersection(set2))
-    all_pos = len(set1.union(set2))
+# Now, get the within host changes from day 7
+# Use the within_host_changes.txt summary file to check the total numbers of changes for each host
 
-    similarity = float(common)/all_pos
-    within_host_similarity[k] = similarity
+# Read in the within_host_changes table
+# Cohort  Sample_t0       Sample_t1       Species NumTestedSNPs   NumSNPChanges   NumTestedGenes  NumGeneChanges
+file_path = '/home/ada/Desktop/KITP_tutorials/kitp_2021_microbiome_data/within_host_changes.txt'
 
-print(within_host_similarity)
+df = pd.read_csv(file_path, sep='\t')
+
+# Check which rows in within_host changes are from the same person.
+same_person_changes = []
+within_host_similarity = []
+for index, row in df.iterrows():
+    s1, s2 = row.Sample_t0, row.Sample_t1
+    if row.Species == 'Bacteroides_vulgatus_57955' and row.Cohort == 'hmp':
+
+        # Use the time points from within_host_changes summary file as the time points to calculate the 
+        # changes in private snps
+        for k, v in host_timepoints.items():
+            if s1 in v.keys() and s2 in v.keys():
+                set1 = set(v[s1])
+                set2 = set(v[s2])
+
+                # Check how many items are in common
+                common = len(set1.intersection(set2))
+                all_pos = len(set1.union(set2))
+
+                similarity = float(common)/all_pos
+                within_host_similarity.append(similarity)
+
+                same_person_changes.append(int(row.NumSNPChanges))
+                print(row)
+
+
+
+# Plot
+plt.scatter(same_person_changes, within_host_similarity)
+plt.ylabel('Within host similarity of private SNPs')
+plt.xlabel('Within host overall changes')
+plt.title('Bacteroides_vulgatus_57955')
+plt.show()
